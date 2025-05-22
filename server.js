@@ -3,10 +3,15 @@ import multer from 'multer';
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 import FormData from 'form-data';
+import cors from 'cors'; // ✅ IMPORTANTE
 
 dotenv.config();
+
 const app = express();
 const upload = multer();
+
+// ✅ Habilita CORS para todas las rutas
+app.use(cors());
 
 app.post('/transcribe', upload.single('file'), async (req, res) => {
   try {
@@ -23,7 +28,13 @@ app.post('/transcribe', upload.single('file'), async (req, res) => {
     });
 
     const data = await response.json();
-    res.json({ text: data.text });
+
+    // Validación de respuesta
+    if (response.ok && data.text) {
+      res.json({ text: data.text });
+    } else {
+      res.status(500).send(data.error?.message || 'Error desconocido al transcribir');
+    }
   } catch (err) {
     res.status(500).send(err.message);
   }
